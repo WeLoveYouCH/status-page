@@ -16,7 +16,7 @@ Eine Action schreibt daraus die Datei in `_ereignisse/`. Nach 1–2 Minuten ist 
 | Fehlalarm / Wartung abgesagt | **Close as not planned**: Der Eintrag verschwindet von der Seite. |
 | Nicht veröffentlichen | Kommentar mit `intern:` beginnen. |
 
-- Veröffentlicht werden nur Issues und Kommentare von Personen mit **Schreibrecht** aufs Repo. Das Repo ist öffentlich, Kommentare von Fremden erscheinen also nicht auf der Seite.
+- Veröffentlicht werden nur Issues und Kommentare von Personen mit **Schreibrecht** aufs Repo. Das Repo ist öffentlich: Kommentare von Fremden erscheinen nicht auf der Seite, und Issues von Fremden schliesst und sperrt die Action automatisch (mit Hinweis auf die Support-E-Mail aus `_data/einstellungen.yml`).
 - Zeiten im Format `19.11.2026 15:40` (Schweizer Zeit). Bei Fehlern kommentiert die Action im Issue, was nicht stimmt.
 - Die erzeugten Dateien nicht von Hand ändern. Sie werden bei jeder Änderung am Issue neu geschrieben.
 - Neue Systeme: in `_data/einstellungen.yml` **und** in den beiden Formularen unter `.github/ISSUE_TEMPLATE/` eintragen (gleicher `name`).

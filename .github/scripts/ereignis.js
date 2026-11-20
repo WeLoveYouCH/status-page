@@ -53,7 +53,7 @@ function datum(j, mo, t, h, mi, feld, s) {
 
 /** Systeme aus _data/einstellungen.yml lesen: { "Odoo": "odoo", ... } */
 function ladeSysteme(root) {
-  const txt = fs.readFileSync(path.join(root, EINSTELLUNGEN), "utf8");
+  const txt = fs.readFileSync(path.join(root, EINSTELLUNGEN), "utf8").replace(/\r/g, "");
   const map = {};
   const block = txt.split(/^systeme:\s*$/m)[1] || "";
   for (const eintrag of block.split(/^\s*-\s+(?=id:)/m).slice(1)) {
@@ -62,6 +62,17 @@ function ladeSysteme(root) {
     if (id && name) map[name.replace(/^["']|["']$/g, "")] = id;
   }
   return map;
+}
+
+/** support.email aus _data/einstellungen.yml, oder "" */
+function ladeSupportEmail(root) {
+  try {
+    const txt = fs.readFileSync(path.join(root, EINSTELLUNGEN), "utf8").replace(/\r/g, "");
+    const block = (txt.match(/^support:\s*\n((?:[ \t]+.*\n?)*)/m) || [])[1] || "";
+    return ((block.match(/^\s+email:\s*["']?([^"'\s]+)/m) || [])[1]) || "";
+  } catch (e) {
+    return "";
+  }
 }
 
 function slug(s) {
@@ -168,12 +179,15 @@ module.exports = async function run({ github, context, core }) {
   async function darf(user) {
     if (!user || user.type === "Bot") return false;
     if (!rechte.has(user.login)) {
-      let ok = false;
+      // true = darf, false = darf sicher nicht, null = nicht prüfbar (zählt als «darf nicht»)
+      let ok = null;
       try {
         const { data } = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username: user.login });
         ok = ERLAUBT.includes(data.permission) || ERLAUBT.includes(data.role_name);
       } catch (e) {
-        core.warning(`Rechte von ${user.login} nicht prüfbar: ${e.message}`);
+        // 404 = keine Mitarbeiter:in des Repos -> sicher kein Schreibrecht
+        if (e.status === 404) ok = false;
+        else core.warning(`Rechte von ${user.login} nicht prüfbar: ${e.message}`);
       }
       rechte.set(user.login, ok);
     }
@@ -188,8 +202,29 @@ module.exports = async function run({ github, context, core }) {
     return;
   }
 
-  if (!(await darf(issue.user))) {
+  const autorDarf = await darf(issue.user);
+  if (!autorDarf) {
     core.info(`Issue #${issue.number} von ${issue.user.login} ohne Schreibrecht: wird nicht veröffentlicht.`);
+    // Fremde Issues direkt schliessen und sperren. Nur wenn sicher feststeht, dass
+    // die Person kein Schreibrecht hat (null = Rechte nicht prüfbar -> nichts tun).
+    const neu = context.eventName === "issues" && ["opened", "reopened"].includes(context.payload.action);
+    if (neu && autorDarf === false && issue.user.type !== "Bot" && issue.state === "open") {
+      const email = ladeSupportEmail(root);
+      await github.rest.issues.createComment({
+        owner, repo, issue_number: issue.number,
+        body:
+          "Danke für deine Meldung! Über dieses Repository veröffentlichen wir nur unsere eigenen Statusmeldungen, " +
+          "deshalb schliessen wir das Issue automatisch.\n\n" +
+          (email ? `Bei Fragen oder Problemen erreichst du unseren Support unter ${email}.` : "Bei Fragen oder Problemen wende dich bitte an unseren Support."),
+      });
+      await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: "closed", state_reason: "not_planned" });
+      try {
+        await github.rest.issues.lock({ owner, repo, issue_number: issue.number, lock_reason: "off-topic" });
+      } catch (e) {
+        core.warning(`Issue #${issue.number} konnte nicht gesperrt werden: ${e.message}`);
+      }
+      core.info(`Issue #${issue.number} geschlossen und gesperrt.`);
+    }
     return;
   }
 
