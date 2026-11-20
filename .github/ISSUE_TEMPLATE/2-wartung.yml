@@ -1,0 +1,54 @@
+name: Wartung planen
+description: Geplante Arbeiten. Erscheint unter «Geplante Wartungsarbeiten».
+labels: [wartung]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Der **Titel** oben erscheint so auf der Statusseite: kurz und ohne Fachbegriffe.
+
+        Vor dem Start steht die Wartung als «Geplant» auf der Seite, zwischen Start und Ende als «Läuft gerade» und danach im Verlauf. Das passiert automatisch.
+
+        - **Zeit oder Text ändern:** Issue bearbeiten (… → *Edit*) oder einen Kommentar schreiben. Der neueste Kommentar ersetzt den Text.
+        - **Abgesagt:** *Close as not planned* entfernt die Wartung von der Seite.
+        - Nach der Wartung kann das Issue einfach geschlossen werden (*Close as completed*), der Eintrag bleibt im Verlauf.
+
+        Kommentare, die mit `intern:` beginnen, werden nicht veröffentlicht.
+  - type: dropdown
+    id: systeme
+    attributes:
+      label: Betroffene Systeme
+      multiple: true
+      options:
+        - Rechenzentrum Schweiz
+        - Rechenzentrum Deutschland
+        - WordPress-Websites
+        - Statamic-Websites
+        - inCMS-Websites
+        - Odoo
+    validations:
+      required: true
+  - type: input
+    id: start
+    attributes:
+      label: Start
+      description: Schweizer Zeit
+      placeholder: "10.12.2026 22:00"
+    validations:
+      required: true
+  - type: input
+    id: ende
+    attributes:
+      label: Ende
+      description: Schweizer Zeit
+      placeholder: "10.12.2026 23:00"
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: Information für Kunden
+      description: Was machen wir und was müssen Kunden beachten?
+      placeholder: Odoo ist in diesem Zeitraum für einige Minuten nicht erreichbar. Bitte speichere offene Arbeiten vorher.
+    validations:
+      required: true

@@ -1,0 +1,53 @@
+name: Störung melden
+description: Ungeplantes Problem. Erscheint sofort zuoberst auf der Statusseite.
+labels: [stoerung]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Der **Titel** oben erscheint so auf der Statusseite: kurz und ohne Fachbegriffe.
+
+        **So geht es weiter:**
+        - **Update:** einen Kommentar schreiben. Der neueste Kommentar ist die aktuelle Meldung, die älteren erscheinen im Verlauf.
+        - **Status:** Label `identifiziert` (Ursache gefunden) oder `beobachtung` (behoben, wir beobachten) setzen.
+        - **Behoben:** zuerst einen Kommentar wie «Behoben, Ursache war …» schreiben, dann das Issue schliessen (*Close as completed*).
+        - **Fehlalarm:** *Close as not planned* entfernt die Störung wieder von der Seite.
+
+        Kommentare, die mit `intern:` beginnen, werden nicht veröffentlicht.
+  - type: dropdown
+    id: systeme
+    attributes:
+      label: Betroffene Systeme
+      multiple: true
+      options:
+        - Rechenzentrum Schweiz
+        - Rechenzentrum Deutschland
+        - WordPress-Websites
+        - Statamic-Websites
+        - inCMS-Websites
+        - Odoo
+    validations:
+      required: true
+  - type: dropdown
+    id: schwere
+    attributes:
+      label: Schwere
+      options:
+        - Ausfall (nicht erreichbar)
+        - Eingeschränkt (langsam oder teilweise gestört)
+    validations:
+      required: true
+  - type: input
+    id: start
+    attributes:
+      label: Start
+      description: Seit wann das Problem besteht, Schweizer Zeit. Leer lassen = jetzt.
+      placeholder: "19.11.2026 15:40"
+  - type: textarea
+    id: text
+    attributes:
+      label: Information für Kunden
+      description: Was ist betroffen, was tun wir, müssen Kunden etwas beachten?
+      placeholder: Odoo ist im Moment nicht erreichbar. Wir schauen uns das an.
+    validations:
+      required: true

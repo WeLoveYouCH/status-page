@@ -1,0 +1,524 @@
+---
+# Leerer Kopf, damit GitHub Pages diese Datei verarbeitet.
+---
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status – WeLoveYou</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<meta name="description" content="Aktueller Status der Dienste von WeLoveYou: Störungen, geplante Wartungsarbeiten und Verlauf.">
+
+<script>
+/* Inhalte NICHT hier bearbeiten:
+   - Ereignisse:                 Ordner _ereignisse/  (eine Datei pro Wartung/Störung)
+   - Hinweis, Systeme, Kontakt:  _data/einstellungen.yml
+   GitHub Pages (Jekyll) setzt beim Veröffentlichen alles hier ein. */
+const STATUS = {{ site.data.einstellungen | jsonify }};
+STATUS.ereignisse = [
+{%- for e in site.ereignisse %}
+  { "typ": {{ e.typ | jsonify }}, "titel": {{ e.titel | jsonify }}, "systeme": {{ e.systeme | jsonify }},
+    "start": {{ e.start | jsonify }}, "ende": {{ e.ende | jsonify }}, "schwere": {{ e.schwere | jsonify }},
+    "status": {{ e.status | jsonify }}, "updates": {{ e.updates | jsonify }},
+    "text": {{ e.content | strip_html | strip | jsonify }}, "html": {{ e.content | strip | jsonify }} }{% unless forloop.last %},{% endunless %}
+{%- endfor %}
+];
+</script>
+
+<style>
+  @font-face{font-family:"Afacad Flux";font-weight:100 1000;font-style:normal;font-display:swap;
+    src:url(fonts/afacad-flux-latin.woff2) format("woff2");
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:"Afacad Flux";font-weight:100 1000;font-style:normal;font-display:swap;
+    src:url(fonts/afacad-flux-latin-ext.woff2) format("woff2");
+    unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+  :root{
+    --ink:#303030; --text:#4d4d4d; --muted:#6b6b6b; --line:#e3e3e3; --soft:#f4f4f4; --bg:#ffffff;
+    /* Markenfarben */
+    --cyan:#4bd7e3; --yellow:#ffd767; --green:#7cd01d; --violet:#d8b8ff; --red:#fa3349;
+    --dark:#262626;
+    /* *-fill = Markenfarbe für Flächen, ohne Zusatz = dunklere Variante für kleine Schrift auf Weiss */
+    --ok:#3d7a00; --ok-fill:var(--green); --ok-bg:#eef9e1;
+    --warn:#8a6500; --warn-fill:var(--yellow); --warn-bg:#fff7e1;
+    --down:#d9142b; --down-fill:var(--red); --down-bg:#fee6e9;
+    --maint:#0a7c88; --maint-fill:var(--cyan); --maint-bg:#e4f9fb;
+    --head:var(--body);
+    --body:"Afacad Flux","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font:400 18px/1.55 var(--body)}
+  h1,h2,h3,.brand,.notice strong,.sys-name,.date .d{color:var(--ink)}
+  a{color:inherit}
+  .wrap{max-width:960px;margin:0 auto;padding:0 28px}
+
+  /* Kopfzeile */
+  header{padding:26px 0;border-bottom:1px solid var(--line)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .brand .logo{width:40px;height:auto;display:block}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--head);font-weight:700;font-size:1.2rem;letter-spacing:-.01em}
+  .brand .tag{font-family:var(--body);font-weight:600;font-size:1.25rem;color:var(--ink);letter-spacing:0}
+  .hearts{display:inline-grid;grid-template-columns:repeat(3,8px);gap:2px;transform:rotate(45deg);margin-right:6px}
+  .hearts i{width:8px;height:8px;display:block}
+  .btn{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;font:500 .82rem/1 var(--body);
+    padding:11px 16px;border:1.5px solid var(--ink);border-radius:3px;cursor:pointer}
+  .btn:hover{background:#000}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn.ghost:hover{background:var(--ink);color:#fff}
+
+  /* Hero / Gesamtstatus */
+  .hero{display:grid;grid-template-columns:1.25fr 1fr;gap:56px;align-items:center;padding:72px 0 24px}
+  .eyebrow{display:flex;align-items:center;gap:10px;font-weight:500;font-size:.9rem;color:var(--muted);margin-bottom:18px}
+  .eyebrow .sq{width:10px;height:10px;background:var(--c)}
+  h1{font-family:var(--head);font-weight:700;font-size:clamp(2.4rem,6vw,3.6rem);line-height:1.05;letter-spacing:-.02em;margin:0}
+  h1 mark{background:var(--ink);color:#fff;padding:0 .12em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+  .hero p.lead{margin:20px 0 0;color:var(--muted);max-width:30em}
+  .arrow{display:inline-flex;align-items:center;gap:12px;margin-top:22px;font-weight:500;font-size:.95rem;text-decoration:none}
+  .arrow::before{content:"→";font-size:1.2rem;transition:transform .2s}
+  .arrow:hover::before{transform:translateX(4px)}
+  .tile{aspect-ratio:1/1;max-width:340px;justify-self:end;width:100%;background:var(--fill);color:var(--on);
+    display:flex;flex-direction:column;justify-content:space-between;padding:28px}
+  .tile .glyph{width:84px;height:84px;display:block}
+  .tile .glyph svg{width:100%;height:100%;display:block}
+  .tile .lbl{font-family:var(--head);font-weight:700;font-size:1.35rem;line-height:1.15}
+  .tile small{display:block;font-family:var(--body);font-size:.9rem;font-weight:500;opacity:.85;margin-top:6px}
+
+  /* Hinweis */
+  .notice{background:#f2f0f0;padding:28px 32px;margin-top:40px;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start}
+  .notice .heart{width:32px;height:24px;margin-top:4px}
+  .notice strong{display:block;font-family:var(--head);font-weight:700;font-size:1.25rem;line-height:1.2}
+  .notice p{margin:6px 0 0}
+
+  /* Abschnitte */
+  section{margin-top:96px}
+  h2{font-family:var(--head);font-weight:700;font-size:clamp(1.8rem,4vw,2.3rem);line-height:1.1;letter-spacing:-.015em;margin:0 0 8px}
+  .sub{color:var(--muted);margin:0 0 30px;font-size:.98rem}
+
+  .label{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink)}
+  .label::before{content:"";width:9px;height:9px;background:var(--sq,var(--muted))}
+  .label.ok{--sq:var(--ok-fill)} .label.warn{--sq:var(--warn-fill)} .label.down{--sq:var(--down-fill)} .label.maint{--sq:var(--maint-fill)} .label.grey{--sq:var(--muted)}
+
+  /* Aktive Störung */
+  .incident{border:1.5px solid var(--ink);padding:30px 32px;margin-bottom:20px;position:relative}
+  .incident::before{content:"";position:absolute;left:-1.5px;top:-1.5px;bottom:-1.5px;width:8px;background:var(--fill)}
+  .incident h3{font-family:var(--head);font-weight:700;font-size:1.35rem;line-height:1.2;margin:10px 0 0}
+  .meta{font-size:.9rem;color:var(--muted);margin-top:6px}
+  .working{display:inline-flex;align-items:center;gap:10px;margin-top:18px;background:var(--ink);color:#fff;
+    padding:8px 14px;font-weight:500;font-size:.92rem}
+  .pulse{width:9px;height:9px;border-radius:50%;background:var(--fill);animation:p 1.6s infinite}
+  @keyframes p{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--fill) 70%,transparent)}70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+
+  .incident .now{margin:16px 0 0;font-size:1.05rem}
+  .rt p{margin:8px 0 0} .rt ul,.rt ol{margin:8px 0 0;padding-left:1.2em} .rt li{margin:3px 0} .rt a{text-decoration:underline}
+  .timeline{list-style:none;margin:14px 0 0;padding:0}
+  .timeline li{display:grid;grid-template-columns:150px 1fr;gap:20px;padding:14px 0;border-top:1px solid var(--line)}
+  .timeline .when{font-size:.88rem;color:var(--muted);line-height:1.4}
+  .timeline .when b{display:block;color:var(--ink);font-weight:600}
+  .timeline .what b{display:block;font-weight:600;font-size:.95rem}
+  .timeline .what p{margin:2px 0 0}
+
+  /* Wartungen */
+  .mlist{border-top:1.5px solid var(--ink)}
+  .mrow{display:grid;grid-template-columns:110px 1fr;gap:28px;padding:28px 0;border-bottom:1px solid var(--line)}
+  .date{line-height:1}
+  .date .d{font-family:var(--head);font-weight:700;font-size:2.8rem;letter-spacing:-.02em}
+  .date .m{display:block;font-weight:500;font-size:.95rem;margin-top:6px}
+  .date .y{display:block;font-size:.85rem;color:var(--muted);margin-top:2px}
+  .mrow h3{font-family:var(--body);font-weight:600;font-size:1.2rem;margin:6px 0 0;line-height:1.3}
+  .mrow p{margin:8px 0 0}
+  .empty{padding:26px 0;color:var(--muted);border-top:1.5px solid var(--ink);border-bottom:1px solid var(--line)}
+
+  /* Systeme */
+  .systems{border-top:1.5px solid var(--ink)}
+  .grp{font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:26px 0 4px}
+  .sys{padding:18px 0 20px;border-bottom:1px solid var(--line)}
+  .sys-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+  .sys-name{font-weight:600;font-size:1.08rem}
+  .sys-desc{font-size:.9rem;color:var(--muted)}
+  .bars{display:flex;gap:3px;margin-top:14px;height:30px}
+  .bars i{flex:1;background:var(--ok-fill);opacity:.8}
+  .bars i.warn{background:var(--warn-fill);opacity:1} .bars i.down{background:var(--down-fill);opacity:1} .bars i.maint{background:var(--maint-fill);opacity:1}
+  .bars i:hover{opacity:1;outline:1.5px solid var(--ink);outline-offset:1px}
+  .bars-legend{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-top:6px}
+  .short{display:none}
+  .legend{display:flex;flex-wrap:wrap;gap:18px;font-size:.85rem;color:var(--muted);margin-top:16px}
+  .legend span::before{content:"";display:inline-block;width:10px;height:10px;margin-right:7px;vertical-align:-1px;background:var(--c)}
+
+  /* Verlauf */
+  .hist{border-top:1.5px solid var(--ink)}
+  .hrow{display:grid;grid-template-columns:110px 1fr;gap:28px;padding:24px 0;border-bottom:1px solid var(--line)}
+  .hrow .date .d{font-size:2rem}
+  .hrow h3{font-family:var(--body);font-weight:600;font-size:1.1rem;margin:6px 0 0;line-height:1.3}
+  .hrow p{margin:6px 0 0}
+  details summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:12px;margin-top:10px;font-weight:500;font-size:.92rem}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"→";font-size:1.1rem;transition:transform .2s}
+  details[open] summary::before{transform:rotate(90deg)}
+  .more{margin-top:28px}
+
+  /* Footer */
+  footer{background:var(--dark);color:#fff;margin-top:120px;padding:56px 0 40px}
+  .fwrap{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+  .fbrand{display:flex;align-items:center;margin-bottom:22px}
+  .flogo{width:110px;height:auto;display:block}
+  footer a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.35)}
+  footer a:hover{border-bottom-color:#fff}
+  footer .small{font-size:.85rem;color:rgba(255,255,255,.6);margin-top:18px}
+
+  @media (max-width:720px){
+    .wrap{padding:0 20px}
+    .hero{grid-template-columns:1fr;gap:28px;padding:44px 0 8px}
+    .tile{aspect-ratio:auto;max-width:none;justify-self:stretch;flex-direction:row;align-items:center;gap:20px;padding:20px 22px}
+    .tile .glyph{width:44px;height:44px;flex:none}
+    .notice{padding:22px;gap:14px}
+    section{margin-top:72px}
+    .incident{padding:24px 22px 24px 26px}
+    .timeline li{grid-template-columns:1fr;gap:4px}
+    .mrow,.hrow{grid-template-columns:72px 1fr;gap:16px}
+    .date .d{font-size:2rem} .hrow .date .d{font-size:1.6rem}
+    .bars{gap:2px}
+    .bars i:nth-child(-n+60){display:none}
+    .long{display:none} .short{display:inline}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap top">
+    <a class="brand" id="brand" href="./">
+      <svg class="logo" viewBox="0 0 89 76" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M29.3765 45.5001L14.6875 60.6669L29.3765 75.8334L44.0654 60.6669L29.3765 45.5001Z" fill-rule="evenodd" clip-rule="evenodd" fill="#FFCE44"/>
+        <path d="M44.0674 30.334L29.3784 45.5008L44.0674 60.6673L58.7564 45.5008L44.0674 30.334Z" fill-rule="evenodd" clip-rule="evenodd" fill="#DB071F"/>
+        <path d="M29.3765 15.168L14.6875 30.3348L29.3765 45.5013L44.0654 30.3348L29.3765 15.168Z" fill-rule="evenodd" clip-rule="evenodd" fill="#650B01"/>
+        <path d="M14.6893 3.05176e-05L0 15.1669L14.6893 30.3334L29.3779 15.1669L14.6893 3.05176e-05Z" fill-rule="evenodd" clip-rule="evenodd" fill="#2AB8C4"/>
+        <path d="M58.7556 15.168L44.0667 30.3348L58.7556 45.5013L73.4446 30.3348L58.7556 15.168Z" fill-rule="evenodd" clip-rule="evenodd" fill="#650B01"/>
+        <path d="M44.0676 0L29.3784 15.1669L44.0676 30.3333L58.7564 15.1669L44.0676 0Z" fill-rule="evenodd" clip-rule="evenodd" fill="#2AB8C4"/>
+        <path d="M73.444 0L58.7549 15.1669L73.444 30.3333L88.1328 15.1669L73.444 0Z" fill-rule="evenodd" clip-rule="evenodd" fill="#2AB8C4"/>
+      </svg>
+      <span id="brand-name" class="sr-only">WeLoveYou</span><span class="tag">Status</span>
+    </a>
+    <a class="btn" id="contact" href="#">Kontakt</a>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <noscript><p style="padding:60px 0">Bitte aktiviere JavaScript, um den aktuellen Status zu sehen.</p></noscript>
+</main>
+
+<footer>
+  <div class="wrap fwrap" id="footer"></div>
+</footer>
+
+<script>
+(function () {
+  const D = STATUS;
+  const NOW = new Date();
+  const DAY = 864e5;
+  const TAGE = 90;
+
+  // Vorschau: ?demo=stoerung bzw. ?demo=ausfall zeigt eine Beispiel-Störung
+  const demo = new URLSearchParams(location.search).get("demo");
+  if (demo === "wartung") {
+    const f = d => d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate()) + " " + p2(d.getHours()) + ":" + p2(d.getMinutes());
+    D.ereignisse.unshift({
+      typ: "wartung", titel: "Update Odoo-Server", systeme: ["rz-ch", "odoo"],
+      start: f(new Date(NOW - 20 * 60e3)), ende: f(new Date(+NOW + 40 * 60e3)),
+      text: "Wir spielen Updates ein. Odoo kann in diesem Zeitraum für einige Minuten nicht erreichbar sein."
+    });
+  }
+  if (demo === "stoerung" || demo === "ausfall") {
+    const f = d => d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate()) + " " + p2(d.getHours()) + ":" + p2(d.getMinutes());
+    D.ereignisse.unshift(demo === "ausfall" ? {
+      typ: "stoerung", titel: "Odoo nicht erreichbar", systeme: ["rz-ch", "odoo"],
+      start: f(new Date(NOW - 10 * 60e3)), ende: "", schwere: "ausfall",
+      text: "Odoo ist im Moment nicht erreichbar. Wir sind dran und melden uns hier mit dem nächsten Update."
+    } : {
+      typ: "stoerung", titel: "E-Mails aus Webshops werden verzögert versendet", systeme: ["wordpress"],
+      start: f(new Date(NOW - 40 * 60e3)), ende: "", schwere: "eingeschraenkt", status: "identifiziert",
+      text: "Wir haben die Ursache gefunden und beheben das Problem. Es gehen keine E-Mails verloren, sie werden nachgeliefert.",
+      updates: [{ zeit: f(new Date(NOW - 40 * 60e3)), text: "Bestellbestätigungen aus einigen Webshops kommen verspätet an. Wir sind dran." }]
+    });
+  }
+
+  function p2(n) { return String(n).padStart(2, "0"); }
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const parse = s => {
+    const m = String(s ?? "").match(/(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);
+    return m ? new Date(+m[1], m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)) : null;
+  };
+  const fDate = d => d.toLocaleDateString("de-CH", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const fDay = d => d.toLocaleDateString("de-CH", { weekday: "short", day: "numeric", month: "short" });
+  const fTime = d => d.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" });
+  const fDT = d => fDate(d) + ", " + fTime(d) + " Uhr";
+  const sameDay = (a, b) => a.toDateString() === b.toDateString();
+  const fRange = (a, b) => sameDay(a, b)
+    ? fTime(a) + "–" + fTime(b) + " Uhr"
+    : fDT(a) + " bis " + fDT(b);
+  const dateBlock = d =>
+    '<div class="date"><span class="d">' + d.getDate() + '</span>' +
+    '<span class="m">' + d.toLocaleDateString("de-CH", { month: "long" }) + '</span>' +
+    '<span class="y">' + d.toLocaleDateString("de-CH", { weekday: "long" }) + '</span></div>';
+
+  const STATUS_TEXT = {
+    untersuchung:  "Wir schauen uns das an",
+    identifiziert: "Ursache gefunden – wir beheben das Problem",
+    beobachtung:   "Behoben – wir beobachten die Lage",
+    behoben:       "Behoben"
+  };
+  const SCHWERE = {
+    eingeschraenkt:  { cls: "warn", label: "Eingeschränkt" },
+    beeintraechtigt: { cls: "warn", label: "Eingeschränkt" },
+    ausfall:         { cls: "down", label: "Ausfall" }
+  };
+  const FILL = { ok: "var(--ok-fill)", maint: "var(--maint-fill)", warn: "var(--warn-fill)", down: "var(--down-fill)" };
+  const RANK = { ok: 0, maint: 1, warn: 2, down: 3 };
+  const STATE_LABEL = { ok: "Funktioniert", maint: "Wartung läuft", warn: "Eingeschränkt", down: "Ausfall" };
+  const sysName = id => (D.systeme.find(s => s.id === id) || { name: id }).name;
+  const worse = (a, b) => (RANK[b] > RANK[a] ? b : a);
+
+  // --- Daten aufbereiten ---
+  const all = (D.ereignisse || []).filter(e => e && e.titel).map(e => ({ ...e, s: parse(e.start) || NOW, e: parse(e.ende) }));
+  const incidents = all.filter(e => e.typ !== "wartung").map(e => {
+    const resolved = !!(e.e && e.e <= NOW);
+    return {
+      ...e, resolved,
+      cls: (SCHWERE[e.schwere] || SCHWERE.eingeschraenkt).cls,
+      start: e.s, end: resolved ? e.e : NOW,
+      current: resolved ? "behoben" : (e.status || "untersuchung"),
+      ups: (e.updates || []).map(u => ({ ...u, d: parse(u.zeit) })).filter(u => u.d).sort((a, b) => b.d - a.d)
+    };
+  });
+  const maints = all.filter(e => e.typ === "wartung" && e.e);
+  const active = incidents.filter(i => !i.resolved).sort((a, b) => b.start - a.start);
+  const running = maints.filter(m => m.s <= NOW && m.e > NOW);
+  const upcoming = maints.filter(m => m.e > NOW).sort((a, b) => a.s - b.s);
+  const since = new Date(NOW - TAGE * DAY);
+  const history = [
+    ...incidents.filter(i => i.resolved && i.end >= since).map(i => ({ kind: "inc", at: i.start, x: i })),
+    ...maints.filter(m => m.e <= NOW && m.e >= since).map(m => ({ kind: "maint", at: m.s, x: m }))
+  ].sort((a, b) => b.at - a.at);
+
+  function stateOf(id) {
+    let st = "ok";
+    active.forEach(i => { if ((i.systeme || []).includes(id)) st = worse(st, i.cls); });
+    if (st === "ok" && running.some(m => (m.systeme || []).includes(id))) st = "maint";
+    return st;
+  }
+
+  // --- Gesamtstatus ---
+  let overall = "ok";
+  active.forEach(i => overall = worse(overall, i.cls));
+  if (overall === "ok" && running.length) overall = "maint";
+  // Icons (Werkzeug: Lucide, ISC-Lizenz)
+  const svg = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter">' + p + '</svg>';
+  const ICON = {
+    ok:    svg('<path d="M4 12.5 9.5 18 20 6.5"/>'),
+    maint: svg('<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),
+    warn:  svg('<path d="M12 4v10"/><path d="M12 19v1.5"/>')
+  };
+  const O = {
+    ok:    { h: 'Alles <mark>läuft.</mark>', p: "Alle Systeme funktionieren normal. Uns sind keine Störungen bekannt.",
+             glyph: ICON.ok, lbl: "Alle Systeme funktionieren", fill: "var(--ok-fill)", on: "var(--ink)" },
+    maint: { h: 'Wartung <mark>läuft.</mark>', p: "Wir führen gerade geplante Arbeiten durch. Einzelne Dienste können kurz nicht erreichbar sein.",
+             glyph: ICON.maint, lbl: "Geplante Wartung", fill: "var(--maint-fill)", on: "var(--ink)" },
+    warn:  { h: 'Wir sind <mark>dran.</mark>', p: "Einige Dienste sind eingeschränkt. Wir wissen Bescheid und arbeiten bereits an einer Lösung.",
+             glyph: ICON.warn, lbl: "Einige Dienste eingeschränkt", fill: "var(--warn-fill)", on: "var(--ink)" },
+    down:  { h: 'Wir sind <mark>dran.</mark>', p: "Einige Dienste sind nicht erreichbar. Wir arbeiten mit Hochdruck an einer Lösung.",
+             glyph: ICON.warn, lbl: "Störung", fill: "var(--down-fill)", on: "#fff" }
+  }[overall];
+
+  const affected = list => (list || []).length ? "Betrifft: " + list.map(id => esc(sysName(id))).join(", ") : "";
+  const heart = '<svg class="heart" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 45" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M44.9707 29.9902L59.9609 15L44.9414 -0.0195313L29.9805 14.9414L15.0195 -0.0195313L7.62939e-06 15L14.9902 29.9902L29.9805 44.9805L44.9707 29.9902Z" fill="#DA020E"/></svg>';
+
+  // Text der Ereignisse: Jekyll liefert HTML aus dem Markdown. Nur einfache Formatierung
+  // (Absätze, Listen, fett/kursiv, Links) wird übernommen, alles andere als reiner Text.
+  const RICH = { P: 1, UL: 1, OL: 1, LI: 1, STRONG: 1, B: 1, EM: 1, I: 1, BR: 1, A: 1 };
+  function cleanNodes(n) {
+    return [...n.childNodes].map(c => {
+      if (c.nodeType === 3) return esc(c.textContent);
+      if (c.nodeType !== 1) return "";
+      const t = c.tagName, inner = cleanNodes(c);
+      if (!RICH[t]) return inner;
+      if (t === "BR") return "<br>";
+      if (t === "A") {
+        const href = c.getAttribute("href") || "";
+        return /^(https?:|mailto:)/i.test(href) ? '<a href="' + esc(href) + '" rel="noopener">' + inner + "</a>" : inner;
+      }
+      const tag = t.toLowerCase();
+      return "<" + tag + ">" + inner + "</" + tag + ">";
+    }).join("");
+  }
+  function rich(x) {
+    if (!x.html) return x.text ? '<div class="rt"><p>' + esc(x.text) + "</p></div>" : "";
+    const tpl = document.createElement("template"); // inert: nichts wird geladen oder ausgeführt
+    tpl.innerHTML = x.html;
+    return '<div class="rt">' + cleanNodes(tpl.content) + "</div>";
+  }
+
+  function timeline(ups) {
+    return '<ol class="timeline">' + ups.map(u =>
+      '<li><div class="when"><b>' + esc(fTime(u.d)) + ' Uhr</b>' + esc(fDay(u.d)) + '</div>' +
+      '<div class="what"><p>' + esc(u.text) + '</p></div></li>').join("") + '</ol>';
+  }
+
+  function activeCard(i) {
+    const s = SCHWERE[i.schwere] || SCHWERE.eingeschraenkt;
+    return '<article class="incident" style="--fill:' + FILL[i.cls] + '">' +
+      '<span class="label ' + i.cls + '">' + s.label + '</span>' +
+      '<h3>' + esc(i.titel) + '</h3>' +
+      '<div class="meta">Seit ' + esc(fDay(i.start)) + ', ' + esc(fTime(i.start)) + ' Uhr · ' + affected(i.systeme) + '</div>' +
+      '<div class="working"><span class="pulse"></span>' + esc(STATUS_TEXT[i.current] || STATUS_TEXT.untersuchung) + '</div>' +
+      (i.text ? '<div class="now">' + rich(i) + '</div>' : "") +
+      (i.ups.length ? '<details><summary>Bisherige Meldungen</summary>' + timeline(i.ups) + '</details>' : "") +
+      '</article>';
+  }
+
+  function maintRow(m) {
+    const isRunning = m.s <= NOW && m.e > NOW;
+    return '<div class="mrow">' + dateBlock(m.s) + '<div>' +
+      '<span class="label ' + (isRunning ? "maint" : "grey") + '">' + (isRunning ? "Läuft gerade" : "Geplant") + ' · ' + esc(fRange(m.s, m.e)) + '</span>' +
+      '<h3>' + esc(m.titel) + '</h3>' +
+      (m.systeme && m.systeme.length ? '<div class="meta">' + affected(m.systeme) + '</div>' : "") +
+      rich(m) + '</div></div>';
+  }
+
+  function historyRow(h) {
+    if (h.kind === "maint") {
+      const m = h.x;
+      return '<div class="hrow">' + dateBlock(m.s) + '<div>' +
+        '<span class="label maint">Wartung abgeschlossen</span>' +
+        '<h3>' + esc(m.titel) + '</h3>' +
+        '<div class="meta">' + esc(fRange(m.s, m.e)) + (m.systeme && m.systeme.length ? ' · ' + affected(m.systeme) : "") + '</div>' +
+        rich(m) + '</div></div>';
+    }
+    const i = h.x;
+    const mins = Math.max(1, Math.round((i.end - i.start) / 60e3));
+    const dauer = mins < 60 ? mins + " Min." : (Math.floor(mins / 60) + " Std." + (mins % 60 ? " " + (mins % 60) + " Min." : ""));
+    return '<div class="hrow">' + dateBlock(i.start) + '<div>' +
+      '<span class="label ok">Behoben</span>' +
+      '<h3>' + esc(i.titel) + '</h3>' +
+      '<div class="meta">' + esc(fRange(i.start, i.end)) + ' · Dauer ' + dauer + ' · ' + affected(i.systeme) + '</div>' +
+      (i.text ? rich(i) : "") +
+      (i.ups.length ? '<details><summary>Verlauf anzeigen</summary>' + timeline(i.ups) + '</details>' : "") +
+      '</div></div>';
+  }
+
+  function bars(id) {
+    const today0 = new Date(NOW); today0.setHours(0, 0, 0, 0);
+    let out = "";
+    for (let k = TAGE - 1; k >= 0; k--) {
+      const a = new Date(today0 - k * DAY), b = new Date(+a + DAY);
+      let st = "ok", names = [];
+      incidents.forEach(i => {
+        if ((i.systeme || []).includes(id) && i.start < b && i.end > a) { st = worse(st, i.cls); names.push(i.titel); }
+      });
+      maints.forEach(m => {
+        if ((m.systeme || []).includes(id) && m.s < b && m.e > a && m.s <= NOW) { if (st === "ok") st = "maint"; names.push("Wartung: " + m.titel); }
+      });
+      const label = a.toLocaleDateString("de-CH", { day: "numeric", month: "short" }) + " – " + (names.length ? names.join(", ") : "Keine Störungen");
+      out += '<i class="' + (st === "ok" ? "" : st) + '" title="' + esc(label) + '"></i>';
+    }
+    return out;
+  }
+
+  function systems() {
+    let html = "", g = null;
+    D.systeme.forEach(s => {
+      if (s.gruppe && s.gruppe !== g) { g = s.gruppe; html += '<div class="grp">' + esc(g) + '</div>'; }
+      const st = stateOf(s.id);
+      html += '<div class="sys">' +
+        '<div class="sys-head"><div><div class="sys-name">' + esc(s.name) + '</div>' +
+        (s.beschreibung ? '<div class="sys-desc">' + esc(s.beschreibung) + '</div>' : "") + '</div>' +
+        '<span class="label ' + st + '">' + STATE_LABEL[st] + '</span></div>' +
+        '<div class="bars" role="img" aria-label="Verlauf der letzten ' + TAGE + ' Tage">' + bars(s.id) + '</div>' +
+        '<div class="bars-legend"><span><span class="long">vor ' + TAGE + ' Tagen</span><span class="short">vor 30 Tagen</span></span><span>Heute</span></div>' +
+        '</div>';
+    });
+    return html;
+  }
+
+  // --- Seite zusammensetzen ---
+  const lm = new Date(document.lastModified);
+  const updated = isNaN(lm) ? NOW : lm;
+  let html = "";
+
+  html += '<div class="hero"><div>' +
+    '<div class="eyebrow" style="--c:' + O.fill + '"><span class="sq"></span>Systemstatus · aktualisiert ' + esc(fTime(updated)) + ' Uhr</div>' +
+    '<h1>' + O.h + '</h1><p class="lead">' + O.p + '</p>' +
+    (active.length ? '<a class="arrow" href="#stoerungen">Zu den Details</a>' : '<a class="arrow" href="#wartungen">Geplante Arbeiten ansehen</a>') +
+    '</div>' +
+    '<div class="tile" role="status" style="--fill:' + O.fill + ';--on:' + O.on + '"><div class="glyph" aria-hidden="true">' + O.glyph + '</div>' +
+    '<div class="lbl">' + O.lbl + '<small>' + esc(fDate(NOW)) + '</small></div></div></div>';
+
+  if (D.hinweis && D.hinweis.aktiv) {
+    html += '<div class="notice" role="note">' + heart +
+      '<div><strong>' + esc(D.hinweis.titel) + '</strong><p>' + esc(D.hinweis.text) + '</p></div></div>';
+  }
+
+  if (active.length) {
+    html += '<section id="stoerungen"><h2>Aktuelle Störungen</h2><p class="sub">Hier halten wir dich auf dem Laufenden, bis alles wieder läuft.</p>' +
+      active.map(activeCard).join("") + '</section>';
+  }
+
+  html += '<section id="wartungen"><h2>Geplante Wartungsarbeiten</h2><p class="sub">Damit alles sicher und schnell bleibt, warten wir unsere Systeme regelmässig.</p>' +
+    (upcoming.length ? '<div class="mlist">' + upcoming.map(maintRow).join("") + '</div>'
+                     : '<div class="empty">Zurzeit sind keine Wartungsarbeiten geplant.</div>') +
+    '</section>';
+
+  html += '<section><h2>Unsere Systeme</h2><p class="sub">Status heute und Verlauf der letzten ' + TAGE + ' Tage.</p>' +
+    '<div class="systems">' + systems() + '</div>' +
+    '<div class="legend">' +
+    '<span style="--c:var(--ok-fill)">Keine Störung</span>' +
+    '<span style="--c:var(--maint-fill)">Wartung</span>' +
+    '<span style="--c:var(--warn-fill)">Eingeschränkt</span>' +
+    '<span style="--c:var(--down-fill)">Ausfall</span></div></section>';
+
+  const SHOW = 5;
+  html += '<section><h2>Vergangene Ereignisse</h2><p class="sub">Behobene Störungen und abgeschlossene Wartungen der letzten ' + TAGE + ' Tage.</p>';
+  if (history.length) {
+    html += '<div class="hist" id="hist">' + history.slice(0, SHOW).map(historyRow).join("") + '</div>';
+    if (history.length > SHOW) html += '<button class="btn ghost more" id="more">Alle ' + history.length + ' Ereignisse anzeigen</button>';
+  } else {
+    html += '<div class="empty">In den letzten ' + TAGE + ' Tagen gab es keine Störungen.</div>';
+  }
+  html += '</section>';
+
+  document.getElementById("app").innerHTML = html;
+
+  const more = document.getElementById("more");
+  if (more) more.onclick = () => { document.getElementById("hist").innerHTML = history.map(historyRow).join(""); more.remove(); };
+
+  // Kopf / Fuss
+  document.getElementById("brand-name").textContent = D.firma;
+  document.title = "Status – " + D.firma;
+  const c = D.support || {};
+  document.getElementById("contact").href = c.email ? "mailto:" + c.email : (c.web || "#");
+  const footerLogo = '<svg class="flogo" viewBox="0 0 199 156" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(D.firma) + '">' +
+    '<path d="M187.849 155.576C189.904 155.576 191.646 154.64 192.909 153.278L192.949 153.704C193.069 154.562 193.78 155.184 194.651 155.184H197.497C198.328 155.184 199 154.523 199 153.704V134.856C199 134.037 198.328 133.376 197.497 133.376H193.94C193.108 133.376 192.437 134.037 192.437 134.856V148.834C191.566 149.731 190.655 150.353 189.631 150.353C188.088 150.353 187.655 149.534 187.655 147.702V134.85C187.655 134.032 186.984 133.37 186.153 133.37H182.595C181.764 133.37 181.092 134.032 181.092 134.85V148.167C181.092 152.724 182.595 155.565 187.855 155.565M168.404 155.576C174.136 155.576 177.7 152.421 177.7 147.242V141.324C177.7 136.145 174.142 132.989 168.404 132.989C162.667 132.989 159.069 136.145 159.069 141.324V147.242C159.069 152.421 162.627 155.576 168.404 155.576ZM168.404 138.017C170.146 138.017 171.131 139.3 171.131 141.755V146.816C171.131 149.271 170.14 150.555 168.404 150.555C166.668 150.555 165.638 149.271 165.638 146.816V141.755C165.638 139.3 166.628 138.017 168.404 138.017ZM150.69 155.19C151.521 155.19 152.193 154.528 152.193 153.71V145.69L160.259 129.257C160.577 128.634 160.139 127.934 159.428 127.934H155.392C154.481 127.934 153.65 128.477 153.337 129.296L148.869 140.046L144.36 129.296C144.042 128.477 143.216 127.934 142.305 127.934H138.036C137.325 127.934 136.892 128.634 137.205 129.257L145.311 145.729V153.71C145.311 154.528 145.983 155.19 146.814 155.19H150.69ZM138.093 148.8C138.093 147.982 137.581 147.399 136.75 147.399H132.873C132.003 147.399 131.57 147.786 131.57 148.683C131.57 149.501 130.819 150.627 128.923 150.627C127.141 150.627 126.157 149.691 126.157 147.237V145.409H136.716C137.547 145.409 138.218 144.748 138.218 143.93V141.357C138.218 136.178 134.661 132.984 128.923 132.984C123.185 132.984 119.588 136.178 119.588 141.357V147.237C119.588 152.415 123.145 155.571 128.923 155.571C135.054 155.571 138.099 151.636 138.099 148.795M128.917 137.938C130.773 137.938 131.684 139.143 131.684 141.363V141.559L126.066 141.716V141.48C126.066 139.065 127.136 137.938 128.912 137.938M109.461 155.19C110.332 155.19 111.163 154.607 111.437 153.788L118.199 134.783C118.438 134.082 117.92 133.382 117.169 133.382H113.452C112.581 133.382 111.789 133.965 111.59 134.822L108.186 147.791L104.708 134.822C104.469 133.965 103.678 133.382 102.813 133.382H98.8567C98.1053 133.382 97.593 134.082 97.8663 134.783L104.629 153.788C104.947 154.607 105.773 155.19 106.644 155.19H109.45H109.461ZM87.3527 155.576C93.0848 155.576 96.6481 152.421 96.6481 147.242V141.324C96.6481 136.145 93.0905 132.989 87.3527 132.989C81.615 132.989 78.0175 136.145 78.0175 141.324V147.242C78.0175 152.421 81.5751 155.576 87.3527 155.576ZM87.3527 138.017C89.0946 138.017 90.0793 139.3 90.0793 141.755V146.816C90.0793 149.271 89.0889 150.555 87.3527 150.555C85.6166 150.555 84.5863 149.271 84.5863 146.816V141.755C84.5863 139.3 85.5768 138.017 87.3527 138.017ZM75.1315 155.19C75.9626 155.19 76.6343 154.528 76.6343 153.71V151.334C76.6343 150.515 75.9626 149.854 75.1315 149.854H66.6558V129.408C66.6558 128.59 65.9841 127.928 65.1531 127.928H61.2767C60.4456 127.928 59.7739 128.59 59.7739 129.408V153.704C59.7739 154.523 60.4456 155.184 61.2767 155.184H75.1315V155.19ZM55.778 148.8C55.778 147.982 55.2657 147.399 54.4346 147.399H50.5582C49.6873 147.399 49.2547 147.786 49.2547 148.683C49.2547 149.501 48.5033 150.627 46.6078 150.627C44.8262 150.627 43.8414 149.691 43.8414 147.237V145.409H54.4005C55.2315 145.409 55.9032 144.748 55.9032 143.93V141.357C55.9032 136.178 52.3456 132.984 46.6078 132.984C40.8701 132.984 37.2726 136.178 37.2726 141.357V147.237C37.2726 152.415 40.8302 155.571 46.6078 155.571C52.7384 155.571 55.7837 151.636 55.7837 148.795M46.6021 137.938C48.4578 137.938 49.3686 139.143 49.3686 141.363V141.559L43.7503 141.716V141.48C43.7503 139.065 44.8205 137.938 46.5965 137.938M12.9099 155.19C13.7808 155.19 14.572 154.568 14.7713 153.749L18.1752 139.261L21.5735 153.749C21.7727 154.568 22.5639 155.19 23.4348 155.19H27.5503C28.4212 155.19 29.2124 154.607 29.4856 153.788L36.8001 129.335C37.0392 128.634 36.4814 127.934 35.73 127.934H31.6544C30.7835 127.934 29.9922 128.517 29.7987 129.374L25.9622 145.028L22.3647 129.374C22.2053 128.556 21.4141 127.934 20.5432 127.934H16.4675C15.5966 127.934 14.8054 128.556 14.646 129.374L11.0087 144.989L7.33152 129.374C7.1323 128.556 6.34108 127.934 5.47017 127.934H1.12131C0.36994 127.934 -0.182205 128.634 0.0511759 129.335L7.28599 153.788C7.56491 154.607 8.35612 155.19 9.22134 155.19H12.8985H12.9099Z" fill="white"/>' +
+    '<path d="M78.4089 65.727L56.1587 87.6353L78.4089 109.544L100.659 87.6353L78.4089 65.727Z" fill="#FECE43"/>' +
+    '<path d="M100.659 43.8173L78.4092 65.7256L100.659 87.6339L122.91 65.7256L100.659 43.8173Z" fill="#DA020E"/>' +
+    '<path d="M78.4133 21.9081L56.1631 43.8164L78.4133 65.7247L100.664 43.8164L78.4133 21.9081Z" fill="#630700"/>' +
+    '<path d="M56.1596 0L33.9087 21.9089L56.1596 43.8178L78.4105 21.9089L56.1596 0Z" fill="#26B8CD"/>' +
+    '<path d="M122.906 21.9115L100.656 43.8198L122.906 65.7281L145.157 43.8198L122.906 21.9115Z" fill="#630700"/>' +
+    '<path d="M100.655 0L78.4102 21.9089L100.655 43.8178L122.906 21.9089L100.661 0H100.655Z" fill="#26B8CD"/>' +
+    '<path d="M145.157 0L122.906 21.9089L145.157 43.8178L167.408 21.9089L145.157 0Z" fill="#26B8CD"/>' +
+    '</svg>';
+  document.getElementById("footer").innerHTML =
+    '<div class="fbrand">' + footerLogo + '</div>' +
+    '<div>Fragen oder ein Problem, das hier nicht steht? Melde dich bei uns.</div>' +
+    '<div>' + (c.telefon ? '<a href="tel:' + esc(c.telefon.replace(/\s/g, "")) + '">' + esc(c.telefon) + '</a>' : "") +
+    (c.telefon && c.email ? ' &nbsp;·&nbsp; ' : "") +
+    (c.email ? '<a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a>' : "") + '</div>' +
+    (c.web ? '<div class="small"><a href="' + esc(c.web) + '">' + esc(c.web.replace(/^https?:\/\//, "")) + '</a> &nbsp;·&nbsp; Zuletzt aktualisiert: ' + esc(fDT(updated)) + '</div>'
+           : '<div class="small">Zuletzt aktualisiert: ' + esc(fDT(updated)) + '</div>');
+
+  setTimeout(() => location.reload(), 5 * 60e3);
+})();
+</script>
+</body>
+</html>

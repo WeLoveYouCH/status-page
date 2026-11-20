@@ -1,0 +1,14 @@
+# Konfiguration für GitHub Pages (Jekyll)
+timezone: Europe/Zurich
+
+# Wichtig: sonst blendet Jekyll Einträge mit Datum in der Zukunft aus
+# (z.B. geplante Wartungen).
+future: true
+
+collections:
+  ereignisse:
+    output: false
+
+exclude:
+  - README.md
+  - vorlagen

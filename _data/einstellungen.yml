@@ -1,0 +1,42 @@
+# Allgemeine Einstellungen der Statusseite
+
+firma: WeLoveYou
+
+support:
+  telefon: "+41 31 533 04 04"
+  email: support@weloveyou.ch
+  web: https://www.weloveyou.ch
+
+# Banner zuoberst für wichtige Mitteilungen. aktiv: true / false
+hinweis:
+  aktiv: false
+  titel: Support über die Feiertage
+  text: Vom 24. Dezember bis 2. Januar ist unser Support eingeschränkt erreichbar. Bei dringenden Störungen sind wir weiterhin per Telefon für dich da.
+
+# Systeme, die auf der Seite angezeigt werden.
+# Die "id" verwendest du in den Ereignissen unter "systeme".
+systeme:
+  - id: rz-ch
+    gruppe: Rechenzentren
+    name: Rechenzentrum Schweiz
+    beschreibung: Websites, Webshops und Odoo
+  - id: rz-de
+    gruppe: Rechenzentren
+    name: Rechenzentrum Deutschland
+    beschreibung: Websites, Webshops und Odoo
+  - id: wordpress
+    gruppe: Hosting
+    name: WordPress-Websites
+    beschreibung: Websites und WooCommerce-Shops auf WordPress
+  - id: statamic
+    gruppe: Hosting
+    name: Statamic-Websites
+    beschreibung: Websites auf Statamic
+  - id: incms
+    gruppe: Hosting
+    name: inCMS-Websites
+    beschreibung: Websites und Shops auf inCMS
+  - id: odoo
+    gruppe: Hosting
+    name: Odoo
+    beschreibung: ERP, CRM und Buchhaltung bei uns

@@ -1,0 +1,47 @@
+# Schreibt Störungen und Wartungen aus Issues nach _ereignisse/.
+# Logik: .github/scripts/ereignis.js
+name: Ereignis aus Issue
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled, deleted]
+  issue_comment:
+    types: [created, edited, deleted]
+
+permissions:
+  contents: write
+  issues: write
+
+# Nacheinander statt gleichzeitig, damit sich Commits nicht in die Quere kommen.
+concurrency:
+  group: ereignisse
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: ${{ !github.event.issue.pull_request }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Datei aus Issue erzeugen
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = require(process.env.GITHUB_WORKSPACE + '/.github/scripts/ereignis.js');
+            await run({ github, context, core });
+
+      - name: Committen und pushen
+        env:
+          NUMMER: ${{ github.event.issue.number }}
+        run: |
+          git add -A _ereignisse
+          if git diff --cached --quiet; then
+            echo "Keine Änderung."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Ereignis aus Issue #$NUMMER"
+          git pull --rebase
+          git push
