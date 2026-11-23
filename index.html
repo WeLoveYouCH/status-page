@@ -443,12 +443,10 @@ STATUS.ereignisse = [
   }
 
   // --- Seite zusammensetzen ---
-  const lm = new Date(document.lastModified);
-  const updated = isNaN(lm) ? NOW : lm;
   let html = "";
 
   html += '<div class="hero"><div>' +
-    '<div class="eyebrow" style="--c:' + O.fill + '"><span class="sq"></span>Systemstatus · aktualisiert ' + esc(fTime(updated)) + ' Uhr</div>' +
+    '<div class="eyebrow" style="--c:' + O.fill + '"><span class="sq"></span>Systemstatus</div>' +
     '<h1>' + O.h + '</h1><p class="lead">' + O.p + '</p>' +
     (active.length ? '<a class="arrow" href="#stoerungen">Zu den Details</a>' : '<a class="arrow" href="#wartungen">Geplante Arbeiten ansehen</a>') +
     '</div>' +
@@ -514,8 +512,7 @@ STATUS.ereignisse = [
     '<div>' + (c.telefon ? '<a href="tel:' + esc(c.telefon.replace(/\s/g, "")) + '">' + esc(c.telefon) + '</a>' : "") +
     (c.telefon && c.email ? ' &nbsp;·&nbsp; ' : "") +
     (c.email ? '<a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a>' : "") + '</div>' +
-    (c.web ? '<div class="small"><a href="' + esc(c.web) + '">' + esc(c.web.replace(/^https?:\/\//, "")) + '</a> &nbsp;·&nbsp; Zuletzt aktualisiert: ' + esc(fDT(updated)) + '</div>'
-           : '<div class="small">Zuletzt aktualisiert: ' + esc(fDT(updated)) + '</div>');
+    (c.web ? '<div class="small"><a href="' + esc(c.web) + '">' + esc(c.web.replace(/^https?:\/\//, "")) + '</a></div>' : "");
 
   setTimeout(() => location.reload(), 5 * 60e3);
 })();
